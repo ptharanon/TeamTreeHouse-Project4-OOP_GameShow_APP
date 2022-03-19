@@ -44,6 +44,7 @@ class Game{
      * @return  {string}    random phrase string
      */
     getRandomPhrase(){
+        console.log(this.phrases.length);
         return this.phrases[Math.floor(Math.random()*this.phrases.length)];
     }
 
@@ -207,8 +208,8 @@ class Game{
                 case 'headers':
                     const overlayClass = overlay.classList;
                     overlayClass.add('start');
-                    removeClass(overlayClass, 'win');
-                    removeClass(overlayClass, 'lose');
+                    removeClass(overlay, 'win');
+                    removeClass(overlay, 'lose');
                     break;
 
                 default:
@@ -218,6 +219,7 @@ class Game{
 
         //Helper function to remove target class from the input node
         function removeClass(node, target){
+            console.log(node);
             node.classList.remove(target);
         }
 
