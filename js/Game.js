@@ -31,7 +31,7 @@ class Game{
         //Remove the overlay
         overlay.style.display = 'none';
 
-        //
+        //Get random phrases and assign it to the active phrase for the current game
         this.activePhrase = this.getRandomPhrase();
         
         //Setup the DOM element for the active phrase
@@ -39,124 +39,171 @@ class Game{
     }
 
 
-
-    //this method randomly retrieves one of the phrases stored 
-    //in the phrases array and returns it.
+    /**
+     * Get a random phrase from the available phrase array
+     * @return  {string}    random phrase string
+     */
     getRandomPhrase(){
         return this.phrases[Math.floor(Math.random()*this.phrases.length)];
     }
 
 
-
-    //this method controls most of the game logic
-    //It checks to see if the button clicked by the player matches a letter in the phrase, 
-    //and then directs the game based on a correct or incorrect guess. This method should:
-    //  - Disable the selected letter’s onscreen keyboard button.
-
-    //  - If the phrase does not include the guessed letter, 
-    //  add the wrong CSS class to the selected letter's keyboard button and 
-    //  call the removeLife() method.
-
-    //  - If the phrase includes the guessed letter, add the chosen CSS class to the 
-    //  selected letter's keyboard button, call the showMatchedLetter() method on the phrase, 
-    //  and then call the checkForWin() method. If the player has won the game, 
-    //  also call the gameOver() method.
+    /**
+     * Handle player input from on-screen keyboard
+     * @param   {DOM element}       input - DOM element node of the clicked on-screen keyboard
+     */
     handleInteraction(input){
+        //Extract the input character from the on-screen keyboard element
         const inputKey = input.textContent;
+
+        //Check whether the input character is a match
         const isMatch = this.activePhrase.checkLetter(inputKey);
         
+        //Disable the input DOM element
         input.disabled = true;
         
+        //If the input is a match, add 'chosen' class to the element and check for the win conditions
         if(isMatch){
+
+            //Show the matched character/s on the phrase
             this.activePhrase.showMatchedLetter(inputKey);
 
+            //Add 'chosen' class to the element
             input.classList.add('chosen');
 
+            //Check for the win, if the player win call the 'gameOver' method with true
+            //else do nothing
             this.checkForWin() ? this.gameOver(true) : null;
         } 
+
+        //If the input isn't a match, add 'wrong' class to the element and subtract a life
         else {
+            //Add 'wrong' class to the element
             input.classList.add('wrong');
+
+            //Remove a life
             this.removeLife();
         }
     }
 
 
-    //this method removes a life from the scoreboard, 
-    //by replacing one of the liveHeart.png images with a lostHeart.png image 
-    //(found in the images folder) and increments the missed property. 
-    //If the player has five missed guesses (i.e they're out of lives), 
-    //then end the game by calling the gameOver() method.
+    /**
+     * Remove a player life
+     */
     removeLife(){
+        //Replace live heart with lost heart
         hearts[this.missed].src = 'images/lostHeart.png';
         
+        //Increment missed count
         this.missed++;
 
+        //If the missed count is more than max life then call 'gameOver' method with false meaning game over
+        //else do nothing
         (this.missed >= this.maxLife) ? this.gameOver(false) : null;
     }
 
-    //this method checks to see if the player has revealed all of the letters in the active phrase.
+
+    /**
+     * Check for win conditions
+     * @return  {boolean}    return true if the player win else return false
+     */
     checkForWin(){
+        //Query the phrase DOM element
         const boardPhrase = document.querySelectorAll('#phrase ul li');
 
-        let matchedNodes = [];
+        //Variable to hold the character DOM elemenet node which are hidden
+        //This will be used to check whether all characters are revealed or not
+        //If all characters were revealed then it meant the player won
+        let hideNodes = [];
 
+        //Iterate through the active phrase and look for any with 'hide' class
+        //If any, add them into the 'hideNodes' array
         boardPhrase.forEach(node => {
             let matchClass = Array.from(node.classList)
                                     .filter(nodeClass => nodeClass === 'hide');
 
-            if(matchClass.length) matchedNodes.push(node);
+            if(matchClass.length) hideNodes.push(node);
         });
 
-        return (!matchedNodes.length) ? true : false;
+        //Check whether 'hideNodes' array has any item, if there isn't any then it means the player win and return true
+        //else do nothing
+        return (!hideNodes.length) ? true : false;
     }
 
-    //this method displays the original start screen overlay, 
-    //and depending on the outcome of the game, 
-    //updates the overlay h1 element with a friendly win or loss message, 
-    //and replaces the overlay’s start CSS class with either the win or lose CSS class.
+
+    /**
+     * Process the ending of the game whether the player win or loss
+     * @param   {boolean}    isWin   - if the play win then the parameter is true and vice versa
+     */
     gameOver(isWin){
         const overlayClass = overlay.classList;
 
+        //Reset the overlay back
         overlay.style.display = 'inherit';
         overlayClass.remove('start');
 
+        //If the player won, add 'win' class to the overlay and display a congratuation message
         if(isWin){
             overlayClass.add('win');
             resultHeader.textContent = 'Congratz, you LIVE !';
         }
+
+        //If the player lose, add 'lose' class to the overlay and display a loss message
         else {
             overlayClass.add('lose');
             resultHeader.textContent = 'YOU DED !';
         }
     }
 
-
+    /**
+     * Reset the game states back to the initial states
+     */
     resetGameStates(){
+
+        //Function to handle various reset types
         function reset(type){
             switch(type){
+
                 case 'hearts':
+                    //Resetting hearts back to live hearts
                     hearts.forEach(heart => {
                         heart.src = 'images/liveHeart.png'
                     })
                     break;
 
                 case 'keys':
+                    //Variable to hold DOM nodes which need to be reset
                     let resetKeyNode = [];
         
+                    //Resetting all on-screen keys back to initial states
+                    //via iterating through all DOM nodes and add them to the array of nodes to be reset
                     keys.forEach(key => {
+
+                        //Check whether the current node has more than 1 class
+                        //Add it into the array of nodes to be reset if there is more than 1 class
                         if(key.classList.length > 1) resetKeyNode.push(key);
+                        
+                        //Reset disabled property to true
                         key.disabled = false;
                     });
+
+                    //Iterate through the array of nodes to be reset and remove extra class
                     resetKeyNode.forEach(node => {
+
+                        //Check whether the node has 'chosen' class or not
+                        //If yes, remove the 'chosen' class
+                        //If not, remove the 'wrong' class
                         (Array.from(node.classList).filter(c => c === 'chosen').length)? 
                             removeClass(node, 'chosen') : removeClass(node, 'wrong')
                     });
                     break;
 
+                //Reset the phrase DOM li element
                 case 'phrases':
                     wordList.innerHTML = '';
                     break;
                     
+                //Reset the headers
                 case 'headers':
                     const overlayClass = overlay.classList;
                     overlayClass.add('start');
@@ -169,9 +216,11 @@ class Game{
             }
         }
 
+        //Helper function to remove target class from the input node
         function removeClass(node, target){
             node.classList.remove(target);
         }
+
         reset('hearts');
         reset('keys');
         reset('phrases');
