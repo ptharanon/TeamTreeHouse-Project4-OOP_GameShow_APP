@@ -161,7 +161,7 @@ class Game{
      */
     resetGameStates(){
 
-        //Function to handle various reset types
+        //Helper function to handle various reset process
         function reset(type){
             switch(type){
 
